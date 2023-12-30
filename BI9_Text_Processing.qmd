@@ -1,0 +1,90 @@
+```{r}
+library(dplyr)
+install.packages("tidytext")
+install.packages("SnowballC")
+install.packages("wordcloud2")
+library(SnowballC)
+library(wordcloud2)
+library(tidytext)
+```
+
+```{r}
+data <- read.csv("/Users/ania/Downloads/Uber.csv")
+data = data[data$language =="en",]
+data
+```
+```{r}
+summary(data)
+```
+```{r}
+str(data)
+```
+```{r}
+# tokenize data
+# save it to text column
+text_clean = unnest_tokens(data, word, tweet)
+nrow(text_clean)
+head(text_clean)
+```
+```{r}
+# remove stop words
+text_clean = anti_join(text_clean, stop_words)
+head(text_clean)
+```
+
+```{r}
+stop_words
+```
+
+```{r}
+text_clean$stem = wordStem(text_clean$word)
+```
+
+```{r}
+#or with just one code
+text_clean <- 
+  data %>%
+  unnest_tokens(word,tweet) %>% # we do word column from tweet
+  anti_join(stop_words) %>% # remove stop words
+  mutate(stem=wordStem(word)) # with stem we change from describes -> describ
+text_clean
+```
+```{r}
+# word cloud
+wcl = count(text_clean, word, sort =TRUE)
+wcl
+# we don't want https
+wcl = wcl[-c(2,3),]
+wordcloud2(data=wcl, size =1.6, color = 'random-dark')
+```
+```{r}
+# TF, IDF
+tf = count(text_clean, user_id, word)
+tf_idf = bind_tf_idf(tf, term = word, document = user_id, n)
+?bind_tf_idf
+tf_idf
+```
+```{r}
+# sentiment analysis
+# in bing words are classified what is positive and what negative
+sentiment = inner_join(text_clean, get_sentiments("bing"))
+table(sentiment$user_id, sentiment$sentiment)
+table(sentiment$sentiment)
+```
+```{r}
+# different than bing:
+# nrc: fear, joy, happy, negatice, etc
+# afinn: -3,-2,3,2
+```
+
+```{r}
+install.packages("textdata")
+library(textdata)
+```
+
+```{r}
+sentiment = inner_join(text_clean, get_sentiments("afinn"))
+table(sentiment$user_id, sentiment$sentiment)
+table(sentiment$sentiment)
+```
+

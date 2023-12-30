@@ -1,0 +1,93 @@
+
+```{r}
+library(caret)
+library(rattle) # to print a tree
+library(mlbench) # the data
+library(dplyr)
+rm(list = ls())
+```
+
+```{r}
+data("PimaIndiansDiabetes")
+data= PimaIndiansDiabetes
+str(data)
+summary(data)
+```
+
+```{r}
+# Q7
+# diabetes is a target variable
+index = createDataPartition(data$diabetes, p=0.7, list=FALSE)
+train = data[index,]
+test = data[-index,]
+```
+
+```{r}
+knn= train(data=train, diabetes~. , method="knn", preProcess =c("center","scale"))
+knn
+```
+```{r}
+knn_tune = train(data=train, diabetes~. , method="knn",preProcess =c("center","scale"), tuneGrid = expand.grid(k = c(seq(1,8, by = 1))))
+knn_tune
+```
+
+```{r}
+knn_tune$finalModel
+```
+```{r}
+pred_knn = predict(knn_tune, test)
+confusionMatrix(pred_knn, test$diabetes)
+# accuracy if 72%
+```
+```{r}
+#Q8
+logistic <- train(data=train, diabetes~. , method="glmnet", family="binomial", preProcess =c("center","scale"))
+logistic
+```
+
+
+```{r}
+logistic_tune = train(data=train, diabetes~. , method="glmnet", preProcess =c("center","scale"),
+                      tuneGrid = expand.grid(lambda = 0.04 ,alpha = c(seq(0.1, 1, by= 0.1))))
+logistic_tune
+```
+
+```{r}
+# the choice of alpha = 0.3, the mix between Lasso and Ridge regression
+pred_logistic = predict(logistic_tune, test)
+confusionMatrix(pred_logistic, test$diabetes)
+# accuracy of 74%
+```
+
+```{r}
+#Q9
+blogistic <- train(data=train, diabetes~. , method="LogitBoost", preProcess =c("center","scale"))
+blogistic
+```
+
+```{r}
+blogistic_tune <- train(data=train, diabetes~. , method="LogitBoost", preProcess =c("center","scale"), tuneGrid = expand.grid(nIter = c(seq(10,50,by = 10))))
+blogistic_tune
+```
+```{r}
+# accuracy of 80%
+```
+
+
+```{r}
+#Q10
+svm <- train(data=train, diabetes~. , method="svmLinear", preProcess =c("center","scale"))
+svm
+```
+
+```{r}
+svm_tune <- train(data=train, diabetes~. , method="svmLinear",
+                  tuneGrid = expand.grid(C = c(seq(0.1,1,by = 0.1))))
+svm_tune
+```
+
+
+```{r}
+# accuracy of 79%
+```
+

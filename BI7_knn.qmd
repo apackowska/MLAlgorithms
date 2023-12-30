@@ -1,0 +1,108 @@
+```{r}
+install.packages("cluster")
+library(cluster)
+library(factoextra)
+```
+
+```{r}
+data("USArrests")
+data = USArrests
+head(data)
+```
+
+```{r}
+str(data)
+```
+```{r}
+summary(data)
+```
+
+```{r}
+data <- scale(data)
+```
+
+```{r}
+fviz_nbclust(data, kmeans, method = "wss")
+# The optimal number of clusters is 4
+```
+```{r}
+fviz_nbclust(data, kmeans, method='silhouette')
+# according to silhouette method k=2 is the optimal number of clusters
+```
+
+
+```{r}
+kmeans <- kmeans(data, centers = 2, nstart = 25)
+kmeans
+```
+```{r}
+kmeans$centers
+```
+
+```{r}
+fviz_cluster(kmeans, data)
+```
+```{r}
+aggregate(USArrests, by=list(kmeans$cluster), mean)
+```
+```{r}
+final <- cbind(data, cluster = kmeans$cluster)
+final
+```
+```{r}
+# kmedoids tends to be more robust to outliers compared to k-means
+fviz_nbclust(data, pam, method = "wss")
+# looks like 2 is optimal
+```
+```{r}
+fviz_nbclust(data, pam, method="silhouette")
+```
+```{r}
+?pam
+kmed <- pam(data, k=2, nstart=25)
+kmed
+```
+```{r}
+kmed$data
+```
+```{r}
+fviz_cluster(kmed, data)
+```
+```{r}
+final <- cbind(final, cluster2 = kmed$clustering)
+final
+# the number of cluster is different, but in this case the solution for kmeans and kmedoids yiels the same groupping
+```
+```{r}
+fviz_nbclust(data, hcut, method = "wss")
+```
+
+```{r}
+fviz_nbclust(data, hcut, method = "silhouette")
+```
+
+
+```{r}
+# Dissimilarity matrix
+d <- dist(data, method = "euclidean")
+```
+
+
+```{r}
+hc1 <- hclust(d, method = "complete")
+hc1
+```
+
+
+```{r}
+plot(hc1, cex = 0.6, hang = -1)
+```
+```{r}
+sub_grp <- cutree(hc1, k = 2)
+sub_grp
+```
+```{r}
+final <- cbind(final, cluster3 =sub_grp)
+final
+```
+

@@ -1,0 +1,225 @@
+```{r}
+library(caret)
+library(rattle) # to print a tree
+library(mlbench) # the data
+library(MLeval)
+library(dplyr)
+rm(list = ls())
+```
+
+
+```{r}
+data("PimaIndiansDiabetes")
+data= PimaIndiansDiabetes
+str(data)
+summary(data)
+```
+
+```{r}
+# reference class is positive
+data$diabetes=relevel(data$diabetes, ref="pos")
+```
+
+
+```{r}
+index = createDataPartition(data$diabetes, p=0.7, list=FALSE)
+train = data[index,]
+test = data[-index,]
+```
+
+
+```{r}
+# 10 fold crossvalidation
+# based on accuracy
+tree= train(diabetes~., data=train, method="rpart",
+             tuneGrid = expand.grid(cp=seq(0.1,1, by=0.1)),
+             trControl = trainControl(method="cv", number=10))
+tree
+```
+
+
+```{r}
+# AUC and ROC on train set
+# based on AUC
+tree_auc = train(diabetes~., data=train, method="rpart",
+             tuneGrid = expand.grid(cp=seq(0.1,1, by=0.1)),
+             trControl = trainControl(method="cv", number=10,
+                    classProbs = TRUE, summaryFunction = twoClassSummary,
+                    savePredictions = TRUE))
+tree_auc
+```
+```{r}
+X = evalm(tree_auc, gnames = "tree")
+```
+```{r}
+# test set evaluation
+# make predictions
+pred_tree_class = predict(tree_auc, newdata=test)
+pred_tree_class
+```
+
+```{r}
+pred_tree_prob = predict(tree_auc, newdata=test, type = "prob")
+pred_tree_prob
+```
+```{r}
+# confusion matrix
+confusionMatrix(pred_tree_class,test$diabetes)
+```
+```{r}
+# we add an observation column, the actual
+pred_tree_prob$obs = test$diabetes
+pred_tree_prob
+```
+```{r}
+# ROC curve on test set
+x=evalm(pred_tree_prob)
+```
+```{r}
+# Lift chart
+# compare actual values with predicion, which is positive probability
+# to cover 60% of all diabities cases, we need to test about 45% of all cases
+lift = lift(test$diabetes~pred_tree_prob$pos)
+ggplot(lift, values = 60)
+```
+
+```{r}
+lift2 = lift(test$diabetes~pred_tree_prob$pos)
+ggplot(lift2, values = 80)
+```
+
+
+```{r}
+# regression
+data("BostonHousing")
+data2 = BostonHousing
+index = createDataPartition(data2$medv, p=0.7, list=F)
+train2 = data2[index,]
+test2 = data2[-index,]
+```
+
+
+```{r}
+knnfit = train(medv~., data=train2, method = "knn", preProcess = c("center", "scale"),
+               tuneGrid = expand.grid(k=c(1:20)),
+               trControl =  trainControl(method = "cv", number=10))
+knnfit
+```
+
+```{r}
+btree = train(medv~., data=train2, method = "bstTree",
+               tuneGrid = expand.grid(nu=0.1, maxdepth = c(1:5), mstop = 50),
+               trControl =  trainControl(method = "cv", number=10))
+btree
+```
+```{r}
+pred_knn = predict(knnfit, test2)
+pred_knn
+```
+
+```{r}
+pred_btree = predict(btree, test2)
+pred_btree
+```
+
+```{r}
+postResample(pred_knn, test2$medv)
+```
+
+```{r}
+postResample(pred_btree, test2$medv)
+```
+
+
+```{r}
+svm_tune <- train(data=train, diabetes~. , method="svmLinear", 
+                  tuneGrid =expand.grid(C = c(seq(0.1,1,by = 0.1))), 
+                  trControl =  trainControl(method = "cv", number=10))
+svm_tune
+```
+```{r}
+svm_auc = train(data=train, diabetes~. , method="svmLinear", 
+                  tuneGrid =expand.grid(C = c(seq(0.1,1,by = 0.1))), 
+                  trControl =  trainControl(method = "cv", number=10,
+                    classProbs = TRUE, summaryFunction = twoClassSummary,
+                    savePredictions = TRUE))
+svm_auc
+```
+```{r}
+X = evalm(svm_auc)
+```
+```{r}
+# test set evaluation
+# make predictions
+pred_svm_class = predict(svm_auc, newdata=test)
+pred_svm_class
+```
+```{r}
+pred_svm_prob = predict(svm_auc, newdata=test, type = "prob")
+pred_svm_prob
+confusionMatrix(pred_svm_class, test$diabetes)
+```
+```{r}
+# we add an observation column, the actual
+pred_svm_prob$obs = test$diabetes
+pred_svm_prob
+```
+```{r}
+# ROC curver on test set
+x=evalm(pred_svm_prob)
+```
+
+```{r}
+tree_ada_tune = train(data = train, diabetes~., method = "ada",
+                      tuneGrid = expand.grid(nu = 0.1, maxdepth = c(1:4), 
+                                             iter = c(50,75,100)), 
+                  trControl =  trainControl(method = "cv", number=10))
+tree_ada_tune
+```
+
+
+
+
+```{r}
+ada_auc = train(data = train, diabetes~., method = "ada",
+                      tuneGrid = expand.grid(nu = 0.1, maxdepth = c(1:4), 
+                                             iter = c(50,75,100)), 
+                  trControl =  trainControl(method = "cv", number=10,
+                    classProbs = TRUE, summaryFunction = twoClassSummary,
+                    savePredictions = TRUE))
+ada_auc
+```
+```{r}
+X = evalm(ada_auc)
+```
+
+
+```{r}
+# test set evaluation
+# make predictions
+pred_ada_class = predict(ada_auc, newdata=test)
+pred_ada_class
+```
+
+```{r}
+pred_ada_prob = predict(ada_auc, newdata=test, type = "prob")
+pred_ada_prob
+confusionMatrix(pred_svm_class, test$diabetes)
+```
+
+```{r}
+# we add an observation column, the actual
+pred_ada_prob$obs = test$diabetes
+pred_ada_prob
+```
+
+```{r}
+# ROC curve on test set
+x=evalm(pred_ada_prob)
+```
+```{r}
+lift=lift(test$diabetes~pred_tree_prob$pos + pred_ada_prob$pos+pred_svm_prob$pos)
+ggplot(lift,values = 60)
+# we should choose svm basing on lift chart
+```
+

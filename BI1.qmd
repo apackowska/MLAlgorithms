@@ -1,0 +1,92 @@
+
+```{r}
+rm(list=ls())
+1234+2432
+342 – 999
+21321 x 34324^2
+1342/34234
+
+x = 50+25
+x
+z = "IE Business School" 
+y = 20*sqrt(9)
+x==y
+x!=y
+x>=y
+x<y
+
+rm(x,y,z)
+```
+
+```{r}
+(u = c(4,5,7,10))
+mean(u)
+median(u)
+```
+```{r}
+install.packages("caret")
+library(caret)
+?caret
+churn <- Customer.Churn
+rm(Customer.Churn)
+
+```
+
+```{r}
+str(churn)
+summary(churn)
+length(churn)
+nrow(churn)
+str(churn[21])
+typeof(churn$SeniorCitizen)
+mean(churn$MonthlyCharges)
+median(churn$MonthlyCharges)
+
+summary(churn$TotalCharges)
+# 11 missing values
+```
+
+```{r}
+churn$SeniorCitizen <- as.factor(churn$SeniorCitizen)
+str(churn$SeniorCitizen)
+summary(churn$SeniorCitizen)
+```
+
+```{r}
+churn$Churn <- as.factor(churn$Churn)
+str(churn$Churn)
+```
+
+```{r}
+head(churn)
+churn[4,]
+churn[1:20,]
+churn[,3]
+churn[4,3]
+churn[,c(-1,-2)]
+churn[7,"SeniorCitizen"]
+churn$gender[1]
+```
+```{r}
+churn_4000 <- churn$TotalCharges >=4000
+churn[churn_4000,]
+
+churn_yes = churn[churn$Churn=="Yes",]
+churn
+```
+
+
+```{r}
+churn_na = churn[is.na(churn$TotalCharges),]
+View(churn_na)
+```
+
+```{r}
+churn["Suspicious"] <- churn$TotalCharges >6000
+churn$Suspicious
+```
+
+```{r}
+churn$TotalCharges[is.na(churn$TotalCharges)]=0
+```
+

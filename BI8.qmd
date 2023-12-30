@@ -1,0 +1,87 @@
+
+```{r}
+rm(list=ls())
+library(caret)
+library(mlbench)
+library(MLeval)
+```
+
+```{r}
+data(PimaIndiansDiabetes)
+data= PimaIndiansDiabetes
+str(data)
+```
+
+```{r}
+data$diabetes=relevel(data$diabetes, ref="pos")
+```
+
+```{r}
+index = createDataPartition(data$diabetes, p=0.7, list=FALSE)
+train = data[index,]
+test = data[-index,]
+```
+
+
+
+```{r}
+# training AUC 1
+grid1 = expand.grid(layer1 = seq(0,5,by=1),
+                   layer2 = 0,
+                   layer3 = 0)
+nn1 <- train(diabetes~., data=train, method ='mlpML',
+            tuneGrid = grid1,
+            trControl = trainControl(method='cv', number=10, classProbs=TRUE, summaryFunction = twoClassSummary,savePredictions = TRUE))
+nn1
+# 52% accuracy
+```
+
+```{r}
+# training AUC 2
+grid2 = expand.grid(layer1 = seq(0,5,by=1),
+                   layer2 = seq(0,5,by=1),
+                   layer3 = 0)
+nn2 <- train(diabetes~., data=train, method ='mlpML',
+            tuneGrid = grid2,
+            trControl = trainControl(method='cv', number=10, classProbs=TRUE, summaryFunction = twoClassSummary,savePredictions = TRUE))
+nn2
+# 53% accuracy
+```
+```{r}
+# training CV 1
+nn3 <- train(diabetes~., data=train, method ='mlpML',
+            tuneGrid = grid1,
+            trControl = trainControl(method='cv', number=10))
+nn3
+# 65,06% accuracy
+```
+
+```{r}
+# training CV 2
+nn4 <- train(diabetes~., data=train, method ='mlpML',
+            tuneGrid = grid2,
+            trControl = trainControl(method='cv', number=10))
+nn4
+# 65,06% accuracy
+```
+```{r}
+pred_class_nn3 = predict(nn3, newdata=test)
+pred_class_nn3
+```
+
+```{r}
+pred_class_prob_nn3 =  predict(nn3, newdata=test, type = "prob")
+pred_class_prob_nn3
+```
+```{r}
+# confusion matrix
+confusionMatrix(pred_class_nn3,test$diabetes)
+```
+```{r}
+X = evalm(nn1, gnames = "tree")
+```
+
+```{r}
+confusionMatrix(pred_class_nn3,test$diabetes, mode = "everything")
+```
+

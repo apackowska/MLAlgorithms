@@ -1,0 +1,110 @@
+```{r}
+rm(list=ls())
+install.packages("gganimate")
+install.packages("gifski")
+library(caret)
+library(GGally)
+library(ggplot2)
+library(gganimate)
+library(gifski)
+```
+
+```{r}
+data(iris)
+str(iris)
+summary(iris)
+```
+
+
+```{r}
+nzv = nearZeroVar(iris)
+iris$zero = 0
+
+nzv = nearZeroVar(iris)
+iris = iris[,-nzv]
+```
+
+```{r}
+cor(iris[,1:4])
+```
+```{r}
+hist(iris$Sepal.Length)
+ggplot(iris, aes(Petal.Length)) +
+  geom_density()
+```
+```{r}
+ggplot(iris, aes(Petal.Length, fill=Species)) +
+  geom_density() +
+  scale_fill_brewer(palette = "Blues")
+```
+
+```{r}
+ggplot(iris, aes(Petal.Length, color=Species)) +
+  geom_density()
+```
+```{r}
+# degree of transparency, colid is solid with no alpha
+ggplot(iris, aes(Species, Petal.Length, fill=Species)) +
+  geom_boxplot(alpha=0.5) +
+  labs(x="Species", y="Length", title= "boxplot")
+```
+```{r}
+# we need to use color not fill, cause for R the point is a line
+ggplot(iris, aes(Petal.Width, Petal.Length, color=Species)) +
+  geom_point()+
+  scale_color_brewer("Dark2") +
+  geom_line()
+```
+```{r}
+# geom_smooth will fit a straight line to data
+ggplot(iris, aes(Petal.Width, Petal.Length, color=Species)) +
+  geom_point() +
+  geom_smooth(method = lm)
+```
+```{r}
+ggplot(iris, aes(Petal.Width, Petal.Length)) +
+  geom_point() +
+  geom_line() +
+  geom_smooth(method=lm)
+```
+```{r}
+ggpairs(iris)
+ggpairs(iris, aes(color=Species))
+```
+```{r}
+ggplot(iris, aes(Species, fill=Species)) +
+  geom_bar() #based on count
+```
+
+```{r}
+data = data.frame(names= rep(c("A","B","C"),10),
+                  sales=sample(1:100,30),
+                  year=rep(c(1:10), each=3))
+data
+```
+```{r}
+# without a bar parameter it won't work cause it's set to count not sum
+ggplot(data, aes(x=names, y=sales))+
+  geom_bar(stat = "identity")
+```
+```{r}
+ggplot(data, aes(x=year, y=sales, fill=names)) +
+  geom_area()
+```
+
+```{r}
+# transition_state will reveal one by one and transition_reveal will have all
+p= ggplot(data, aes(x=year, y=sales, fill=names)) +
+  geom_bar(stat = "identity") +
+  transition_reveal(year)
+animate(p)
+```
+```{r}
+p= ggplot(data, aes(x=year, y=sales, fill=names)) +
+  geom_bar(stat = "identity") +
+  transition_states(year)
+animate(p)
+
+```
+
+

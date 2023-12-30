@@ -1,0 +1,78 @@
+
+```{r}
+library(caret)
+library(rattle) # to print a tree
+library(mlbench) # the data
+library(dplyr)
+rm(list = ls())
+```
+
+```{r}
+data("BostonHousing")
+data = BostonHousing
+?BostonHousing
+str(data)
+head(data)
+```
+
+
+```{r}
+index = createDataPartition(data$medv, p = 0.7, list=FALSE)
+train = data[index,]
+test = data[-index,]
+```
+```{r}
+# linear regression
+lm = train(medv~., data = train, method="lm")
+lm
+lm$finalModel
+# no tuning parameters
+# RMSE - root mean squared error, for every single house on average 5 thousand dolars error
+```
+```{r}
+lmpred = predict(lm, newdata = test)
+postResample(lmpred, test$medv) #insted of confustion matrix, measure accuracy in prediction
+```
+
+```{r}
+# knn regression
+knnFit = train(medv~., data=train, method = "knn", preProcess = c("center", "scale"),
+               tuneGrid = expand.grid(k = seq(1,30, by=5)))
+knnFit
+# in linear regression it's find not to standardize, cause it'll change the coefiicients
+# in knn preProcess is really important
+```
+```{r}
+knnFit$finalModel
+# the problem with this evaluation process, we find the best model for the best accuracy in the training data that is mosl likely to overfit and not to good with tasting data
+# we will choose parameters not based on accuracy
+```
+```{r}
+knnpred = predict(knnFit, test)
+postResample(knnpred, test$medv)
+```
+```{r}
+regtree = train(data=train, medv~. , method="rpart",
+                        tuneGrid = expand.grid(cp = c(seq(0.1, 1 , by = 0.1))))
+regtree
+# it will know that it's not the decision tree becasue target variable is continuous
+```
+```{r}
+regtreepred = predict(regtree, test)
+postResample(regtreepred, test$medv)
+```
+```{r}
+btree = train(medv~., data = train, method = "bstTree")
+btree
+```
+```{r}
+btree_tune = train(medv~., data = train, method = "bstTree",
+                   tuneGrid = expand.grid(cp = seq(0.1,1, by=0.1)))
+btree_tune
+```
+
+```{r}
+btree_tunepred = predict(btree_tune, test)
+postResample(btree_tunepred, test$medv)
+```
+

@@ -1,0 +1,112 @@
+
+```{r}
+install.packages("caret")
+install.packages("rattle")
+install.packages("mlbench")
+library(caret)
+library(rattle) # to print a tree
+library(mlbench) # the data
+rm(list = ls())
+# caret documentation go there
+```
+
+```{r}
+data("PimaIndiansDiabetes")
+data = PimaIndiansDiabetes
+```
+
+```{r}
+?PimaIndiansDiabetes
+summary(data)
+head(data)
+```
+
+
+```{r}
+str(data)
+```
+
+```{r}
+length(data)
+nrow(data)
+index = createDataPartition(data$diabetes, p = 0.7, list=F) # first parameter is the target variable
+train = data[index,]
+test = data[-index,]
+```
+
+```{r}
+# train a couple of models
+tree_rpart = train(data=train, diabetes~. , method = "rpart")
+tree_rpart
+
+```
+```{r}
+# it already tuned the parameters,first column tells us what are the parameters, in this case cp - cost of complexity
+```
+
+```{r}
+tree_rpart$finalModel
+```
+```{r}
+plot(tree_rpart)
+```
+```{r}
+# what are the parameters, stopping conditions
+```
+
+```{r}
+tree_rpart_tune = train(data=train, diabetes~. , method="rpart",
+                        tuneGrid = expand.grid(cp = c(seq(0.1,0.5, by = 0.1))))
+tree_rpart_tune
+```
+```{r}
+# cp 0.1 the biggest tree, if we increase cost of complexity the tree will be smaller and usually smaller accuracy, but not always
+```
+
+```{r}
+tree_rpart_tune$finalModel
+```
+```{r}
+fancyRpartPlot(tree_rpart_tune$finalModel)
+```
+
+```{r}
+tree_rf = train(diabetes~. , data=train, method="rf")
+tree_rf
+# mtry is the number of randomly selected variables at the splits - look at random forests
+```
+```{r}
+tree_rf$finalModel
+```
+```{r}
+tree_rf_tune = train(data = train, diabetes~. , method = "rf",
+                     tuneGrid = expand.grid(mtry =c(2:8)))
+tree_rf_tune
+```
+```{r}
+tree_rf_tune$finalModel
+```
+
+```{r}
+# type of boosting model
+tree_ada = train(data = train, diabetes~., method = "ada")
+tree_ada
+```
+```{r}
+tree_ada_tune = train(data = train, diabetes~., method = "ada",
+                      tuneGrid = expand.grid(nu = 0.1, maxdepth = c(1:4), 
+                                             iter = c(50,75,100)))
+# nu parameter is learning rate, iter is number of trees, nu - how much weight you're going to put in the model on errors of previous trees
+tree_ada_tune
+```
+
+```{r}
+# prediction
+pred_rpart = predict(tree_rpart, test)
+```
+
+```{r}
+# exam predicion results
+confusionMatrix(pred_rpart, test$diabetes)
+```
+
